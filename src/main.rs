@@ -1,5 +1,6 @@
 mod cli_arg_parser;
 mod graphics_processor;
+mod memory;
 mod term;
 
 fn main() {

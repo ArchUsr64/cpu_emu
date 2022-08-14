@@ -1,11 +1,8 @@
 mod term;
+mod cli_arg_parser;
 
 fn main() {
-	let mut term_mode: bool = false;
-	let args: Vec<String> = std::env::args().collect();
-	if args.len() > 1 {
-		term_mode = true;
-	}
+	let term_mode = cli_arg_parser::parse().term_mode;
 	if term_mode {
 		term::ctrl_c_init();
 		let t: term::TerminalSize = term::get_terminal_size();

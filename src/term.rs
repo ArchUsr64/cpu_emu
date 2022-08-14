@@ -6,6 +6,12 @@ pub struct TerminalSize {
 	pub rows: u32,
 }
 
+impl std::fmt::Display for TerminalSize {
+	fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+		write!(f, "({}, {})", self.rows, self.cols)
+	}
+}
+
 pub fn get_terminal_size() -> TerminalSize {
 	let mut return_struct: TerminalSize = TerminalSize { rows: 0, cols: 0 };
 	termsize::get().map(|size| {

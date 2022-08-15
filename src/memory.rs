@@ -9,7 +9,7 @@ impl RAM {
 	pub fn set(&mut self, address: u32, val: u8) {
 		self.data[address as usize] = val;
 	}
-	pub fn get(&mut self, address: u32) -> u8 {
+	pub fn get(&self, address: u32) -> u8 {
 		self.data[address as usize]
 	}
 }
@@ -25,7 +25,7 @@ impl GPR {
 	pub fn set(&mut self, address: u32, val: u8) {
 		self.data[address as usize] = val;
 	}
-	pub fn get(&mut self, address: u32) -> u8 {
+	pub fn get(&self, address: u32) -> u8 {
 		self.data[address as usize]
 	}
 }
@@ -41,7 +41,7 @@ impl ACR {
 	pub fn set(&mut self, val: u8) {
 		self.data = val;
 	}
-	pub fn get(&mut self) -> u8 {
+	pub fn get(&self) -> u8 {
 		self.data
 	}
 }

@@ -1,6 +1,7 @@
 mod cli_arg_parser;
 mod graphics_processor;
 mod memory;
+mod sprite_processor;
 mod term;
 
 fn main() {
@@ -12,7 +13,7 @@ fn main() {
 		term::ctrl_c_init();
 		let term_size: term::TerminalSize = term::get_terminal_size();
 		println!("Current terminal size: {}", term_size);
-		if term_size.rows < gpu_res.0 || term_size.cols < gpu_res.1 {
+		if term_size.rows < gpu_res.0.into() || term_size.cols < gpu_res.1.into() {
 			println!(
 				"Terminal size insufficient, should be greater than {:?}",
 				gpu_res

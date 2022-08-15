@@ -3,6 +3,7 @@ mod graphics_processor;
 mod memory;
 mod sprite_processor;
 mod term;
+mod central_processor;
 
 fn main() {
 	let term_mode = cli_arg_parser::parse().term_mode;

@@ -1,11 +1,15 @@
+mod central_processor;
 mod cli_arg_parser;
+mod config_parser;
+mod control_processor;
 mod graphics_processor;
+mod json_extensions;
 mod memory;
 mod sprite_processor;
 mod term;
-mod central_processor;
 
 fn main() {
+	config_parser::parse_config();
 	let term_mode = cli_arg_parser::parse().term_mode;
 	let mut gpu = graphics_processor::GPU::new(2, 3);
 	let gpu_res = gpu.get_resolution();

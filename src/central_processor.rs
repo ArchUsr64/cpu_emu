@@ -7,17 +7,17 @@ pub enum CPUOperationName {
 	MUL,
 	DIV,
 	MOD,
-	LOADFROMACM,
 	INC,
 	DEC,
-	MV,
-	MVFROMMEM,
-	MVTOMEM,
 	AND,
 	OR,
 	NOT,
 	SHL,
 	SHR,
+	MV,
+	MVFROMMEM,
+	MVTOMEM,
+	LOADFROMACM,
 }
 impl CPUOperationName {
 	pub fn process(self, operand1: u8, operand2: u8) -> (u8, bool) {
@@ -25,7 +25,7 @@ impl CPUOperationName {
 			CPUOperationName::ADD => (operand1 + operand2, true),
 			CPUOperationName::SUB => (operand1 - operand2, true),
 			CPUOperationName::MUL => (operand1 * operand2, true),
-			CPUOperationName::DIV => (operand1 + operand2, true),
+			CPUOperationName::DIV => (operand1 / operand2, true),
 			CPUOperationName::MOD => (operand1 % operand2, true),
 			CPUOperationName::INC => (operand1 + 1, true),
 			CPUOperationName::DEC => (operand1 - 1, true),
@@ -57,6 +57,95 @@ pub struct CPUOperation {
 	name: CPUOperationName,
 	kind: CPUOperationKind,
 	input_type: CPUOperationInputType,
+}
+
+#[test]
+fn cpu_creation() {
+	let cpu = CPU::new();
+	for i in 0..16 {
+		assert_eq!(cpu.ram.get(i), 0u8);
+	}
+	for i in 0..4 {
+		assert_eq!(cpu.gpr.get(i), 0u8);
+	}
+	assert_eq!(cpu.acr.get(), 0u8);
+}
+
+#[test]
+fn cpu_functional_operations() {
+	let mut cpu = CPU::new();
+	for (operand1, operand2) in [(0, 5), (5, 3), (10, 10), (69, 42)] {
+		cpu.gpr.set(0, operand1);
+		cpu.gpr.set(1, operand2);
+		cpu.tick(0b0000_0001);
+		assert_eq!(cpu.acr.get(), operand1 + operand2);
+		cpu.tick(0b0001_0001);
+		assert_eq!(cpu.acr.get(), operand1 - operand2);
+		cpu.tick(0b0010_0001);
+		assert_eq!(cpu.acr.get(), operand1 * operand2);
+		cpu.tick(0b0011_0001);
+		assert_eq!(cpu.acr.get(), operand1 / operand2);
+		cpu.tick(0b0100_0001);
+		assert_eq!(cpu.acr.get(), operand1 % operand2);
+		cpu.tick(0b0101_0001);
+		assert_eq!(cpu.acr.get(), operand1 + 1);
+		cpu.tick(0b0110_0001);
+		assert_eq!(cpu.acr.get(), operand1 - 1);
+		cpu.tick(0b0111_0001);
+		assert_eq!(cpu.acr.get(), operand1 & operand2);
+		cpu.tick(0b1000_0001);
+		assert_eq!(cpu.acr.get(), operand1 | operand2);
+		cpu.tick(0b1001_0001);
+		assert_eq!(cpu.acr.get(), !operand1);
+		cpu.tick(0b1010_0001);
+		assert_eq!(cpu.acr.get(), operand1 << operand2);
+		cpu.tick(0b1011_0001);
+		assert_eq!(cpu.acr.get(), operand1 >> operand2);
+	}
+}
+
+#[test]
+fn cpu_memory_operations() {
+	let mut cpu = CPU::new();
+	let op_code = 0b1100;
+	for i in 0..4 {
+		for j in 0..4 {
+			for value_to_move in 0..1 {
+				cpu.gpr.set(j, value_to_move);
+				let instruction = (op_code << 4) + (i << 2) + j;
+				cpu.tick(instruction);
+				assert_eq!(value_to_move, cpu.gpr.get(i));
+			}
+		}
+	}
+	let op_code = 0b1101;
+	for i in 0..16 {
+		for value_in_ram in 0..=255 {
+			cpu.ram.set(i, value_in_ram);
+			let instruction = (op_code << 4) + i;
+			println!("Instruction to run: {:0b}", instruction);
+			cpu.tick(instruction);
+			assert_eq!(value_in_ram, cpu.acr.get());
+		}
+	}
+	let op_code = 0b1110;
+	for i in 0..16 {
+		for value_in_acr in 0..=255 {
+			cpu.acr.set(value_in_acr);
+			let instruction = (op_code << 4) + i;
+			cpu.tick(instruction);
+			assert_eq!(value_in_acr, cpu.ram.get(i));
+		}
+	}
+	let op_code = 0b1111;
+	for i in 0..4 {
+		for value_in_acr in 0..=255 {
+			cpu.acr.set(value_in_acr);
+			let instruction = (op_code << 4) + (i << 2);
+			cpu.tick(instruction);
+			assert_eq!(value_in_acr, cpu.gpr.get(i));
+		}
+	}
 }
 
 pub struct CPU {
@@ -98,11 +187,6 @@ impl CPU {
 					input_type: CPUOperationInputType::BiOperand,
 				},
 				CPUOperation {
-					name: CPUOperationName::LOADFROMACM,
-					kind: CPUOperationKind::MEMORY,
-					input_type: CPUOperationInputType::UniOperand2,
-				},
-				CPUOperation {
 					name: CPUOperationName::INC,
 					kind: CPUOperationKind::FUNCTIONAL,
 					input_type: CPUOperationInputType::UniOperand2,
@@ -111,21 +195,6 @@ impl CPU {
 					name: CPUOperationName::DEC,
 					kind: CPUOperationKind::FUNCTIONAL,
 					input_type: CPUOperationInputType::UniOperand2,
-				},
-				CPUOperation {
-					name: CPUOperationName::MV,
-					kind: CPUOperationKind::MEMORY,
-					input_type: CPUOperationInputType::BiOperand,
-				},
-				CPUOperation {
-					name: CPUOperationName::MVFROMMEM,
-					kind: CPUOperationKind::MEMORY,
-					input_type: CPUOperationInputType::UniOperand4,
-				},
-				CPUOperation {
-					name: CPUOperationName::MVTOMEM,
-					kind: CPUOperationKind::MEMORY,
-					input_type: CPUOperationInputType::UniOperand4,
 				},
 				CPUOperation {
 					name: CPUOperationName::AND,
@@ -152,6 +221,26 @@ impl CPU {
 					kind: CPUOperationKind::FUNCTIONAL,
 					input_type: CPUOperationInputType::BiOperand,
 				},
+				CPUOperation {
+					name: CPUOperationName::MV,
+					kind: CPUOperationKind::MEMORY,
+					input_type: CPUOperationInputType::BiOperand,
+				},
+				CPUOperation {
+					name: CPUOperationName::MVFROMMEM,
+					kind: CPUOperationKind::MEMORY,
+					input_type: CPUOperationInputType::UniOperand4,
+				},
+				CPUOperation {
+					name: CPUOperationName::MVTOMEM,
+					kind: CPUOperationKind::MEMORY,
+					input_type: CPUOperationInputType::UniOperand4,
+				},
+				CPUOperation {
+					name: CPUOperationName::LOADFROMACM,
+					kind: CPUOperationKind::MEMORY,
+					input_type: CPUOperationInputType::UniOperand2,
+				},
 			],
 		}
 	}
@@ -166,7 +255,7 @@ impl CPU {
 	}
 	pub fn tick(&mut self, instruction: u8) {
 		let (op_code, operand1, operand2) = CPU::parse_instruction(instruction);
-		let unified_operand = operand1 * 16 + operand2;
+		let unified_operand = operand1 * 4 + operand2;
 		let operation = self.operation_from_op_code(op_code);
 		match operation.kind {
 			CPUOperationKind::FUNCTIONAL => {
@@ -175,10 +264,10 @@ impl CPU {
 				self.acr.set(operation.name.process(input1, input2).0)
 			}
 			CPUOperationKind::MEMORY => match operation.name {
-				CPUOperationName::LOADFROMACM => self.gpr.set(operand1, self.acr.get()),
 				CPUOperationName::MV => self.gpr.set(operand1, self.gpr.get(operand2)),
 				CPUOperationName::MVFROMMEM => self.acr.set(self.ram.get(unified_operand)),
 				CPUOperationName::MVTOMEM => self.ram.set(unified_operand, self.acr.get()),
+				CPUOperationName::LOADFROMACM => self.gpr.set(operand1, self.acr.get()),
 				_ => (),
 			},
 		}

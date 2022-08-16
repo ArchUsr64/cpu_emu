@@ -1,6 +1,7 @@
 use super::graphics_processor::GPU;
 use super::memory::RAM;
 
+#[derive(Clone, Copy)]
 pub enum SpriteControlMode {
 	XOnly,
 	YOnly,
@@ -8,72 +9,76 @@ pub enum SpriteControlMode {
 	NoControl,
 }
 
+#[derive(Clone)]
 pub struct SpriteLayout {
-	control_mode: SpriteControlMode,
 	size: (usize, usize),
 	texture: Vec<Vec<u8>>,
 }
 impl SpriteLayout {
-	pub fn new(control_mode: SpriteControlMode, texture: Vec<Vec<u8>>) -> SpriteLayout {
-		let size = (texture[0].len(), texture.len());
-		SpriteLayout {
-			control_mode,
-			size,
-			texture,
-		}
+	pub fn new(size: (usize, usize), texture: Vec<Vec<u8>>) -> SpriteLayout {
+		SpriteLayout { size, texture }
 	}
 }
 
-pub struct Sprite<'a> {
-	layout: &'a SpriteLayout,
+#[derive(Clone)]
+pub struct Sprite {
+	layout_index: u8,
+	control_mode: SpriteControlMode,
 	position: (u8, u8),
 	position_pointer: u8,
 }
-impl<'a> Sprite<'a> {
-	pub fn new(layout: &SpriteLayout, position_pointer: u8) -> Sprite {
+impl Sprite {
+	pub fn new(
+		layout_index: u8,
+		control_mode: SpriteControlMode,
+		position: (u8, u8),
+		position_pointer: u8,
+	) -> Sprite {
 		Sprite {
-			layout,
-			position: (0u8, 0u8),
+			layout_index,
+			control_mode,
+			position,
 			position_pointer,
 		}
 	}
-	pub fn set_position(&mut self, position: (u8, u8)) {
-		self.position = position
-	}
 	pub fn update_position(&mut self, memory: RAM) {
 		let memory_address = self.position_pointer.into();
-		match &self.layout.control_mode {
-			XOnly => self.position.0 = memory.get(memory_address),
-			YOnly => self.position.1 = memory.get(memory_address),
-			BiDirectional => {
-				self.position.0 = memory.get(memory_address);
-				self.position.1 = memory.get(memory_address + 1);
+		self.position = match &self.control_mode {
+			SpriteControlMode::XOnly => (memory.get(memory_address), self.position.1),
+			SpriteControlMode::YOnly => (self.position.0, memory.get(memory_address)),
+			SpriteControlMode::BiDirectional => {
+				(memory.get(memory_address), memory.get(memory_address + 1))
 			}
+			_ => self.position,
 		}
 	}
-	pub fn write_to_gpu(&self, gpu: &mut GPU) {
-		for i in 0..self.layout.size.0 as usize {
-			for j in 0..self.layout.size.1 as usize {
+	pub fn write_to_gpu(&self, gpu: &mut GPU, layout_vec: &Vec<SpriteLayout>) {
+		for i in 0..layout_vec[self.layout_index as usize].size.0 as usize {
+			for j in 0..layout_vec[self.layout_index as usize].size.1 {
 				gpu.set_vram(
 					i + self.position.0 as usize,
 					j + self.position.1 as usize,
-					self.layout.texture[i][j],
+					layout_vec[self.layout_index as usize].texture[i][j],
 				)
 			}
 		}
 	}
 }
 
-pub struct SpriteProcessor<'a> {
-	sprite_vec: Vec<&'a Sprite<'a>>,
+pub struct SPU {
+	sprite_vec: Vec<Sprite>,
+	layout_vec: Vec<SpriteLayout>,
 }
-impl<'a> SpriteProcessor<'a> {
-	pub fn new(sprite_vec: Vec<&'a Sprite>) -> SpriteProcessor<'a> {
-		SpriteProcessor { sprite_vec }
+impl SPU {
+	pub fn new(sprite_vec: Vec<Sprite>, layout_vec: Vec<SpriteLayout>) -> SPU {
+		SPU {
+			sprite_vec,
+			layout_vec,
+		}
 	}
 	pub fn tick(self, gpu: &mut GPU) {
 		for sprite in self.sprite_vec {
-			sprite.write_to_gpu(gpu)
+			sprite.write_to_gpu(gpu, &self.layout_vec)
 		}
 	}
 }

@@ -12,8 +12,8 @@ pub enum CPUOperationName {
 	AND,
 	OR,
 	NOT,
-	SHL,
-	SHR,
+	CMPE,
+	CMPG,
 	MV,
 	MVFROMMEM,
 	MVTOMEM,
@@ -32,8 +32,8 @@ impl CPUOperationName {
 			CPUOperationName::AND => (operand1 & operand2, true),
 			CPUOperationName::OR => (operand1 | operand2, true),
 			CPUOperationName::NOT => (!operand1, true),
-			CPUOperationName::SHL => (operand1 << operand2, true),
-			CPUOperationName::SHR => (operand1 >> operand2, true),
+			CPUOperationName::CMPE => (if operand1 == operand2 { 1u8 } else { 0u8 }, true),
+			CPUOperationName::CMPG => (if operand1 > operand2 { 1u8 } else { 0u8 }, true),
 			_ => (0u8, false),
 		}
 	}
@@ -98,9 +98,9 @@ fn cpu_functional_operations() {
 		cpu.tick(0b1001_0001);
 		assert_eq!(cpu.acr.get(), !operand1);
 		cpu.tick(0b1010_0001);
-		assert_eq!(cpu.acr.get(), operand1 << operand2);
+		assert_eq!(cpu.acr.get(), if operand1 == operand2 { 1u8 } else { 0u8 });
 		cpu.tick(0b1011_0001);
-		assert_eq!(cpu.acr.get(), operand1 >> operand2);
+		assert_eq!(cpu.acr.get(), if operand1 > operand2 { 1u8 } else { 0u8 });
 	}
 }
 
@@ -149,9 +149,9 @@ fn cpu_memory_operations() {
 }
 
 pub struct CPU {
-	ram: RAM,
-	gpr: GPR,
-	acr: ACR,
+	pub ram: RAM,
+	pub gpr: GPR,
+	pub acr: ACR,
 	instruction_set: [CPUOperation; 16],
 }
 impl CPU {
@@ -212,12 +212,12 @@ impl CPU {
 					input_type: CPUOperationInputType::UniOperand2,
 				},
 				CPUOperation {
-					name: CPUOperationName::SHL,
+					name: CPUOperationName::CMPE,
 					kind: CPUOperationKind::FUNCTIONAL,
 					input_type: CPUOperationInputType::BiOperand,
 				},
 				CPUOperation {
-					name: CPUOperationName::SHR,
+					name: CPUOperationName::CMPG,
 					kind: CPUOperationKind::FUNCTIONAL,
 					input_type: CPUOperationInputType::BiOperand,
 				},

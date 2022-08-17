@@ -9,7 +9,9 @@ mod sprite_processor;
 mod term;
 
 fn main() {
-	config_parser::parse_config();
+	let config = config_parser::parse_config_to_json();
+	let computer = control_processor::Computer::new(config);
+	std::process::exit(0);
 	let term_mode = cli_arg_parser::parse().term_mode;
 	let mut gpu = graphics_processor::GPU::new(2, 3);
 	let gpu_res = gpu.get_resolution();

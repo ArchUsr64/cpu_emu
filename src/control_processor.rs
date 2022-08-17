@@ -21,6 +21,12 @@ impl Computer {
 		}
 	}
 
+	pub fn tick(&mut self, instruction: u8) {
+		self.cpu.tick(instruction);
+		self.spu.tick(&self.cpu, &mut self.gpu);
+		self.gpu.render();
+	}
+
 	fn parse_gpu(gpu_config: &JsonValue) -> GPU {
 		GPU::new(
 			gpu_config["resolution"][0].to_num() as u8,

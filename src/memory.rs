@@ -1,3 +1,4 @@
+#[derive(Clone, Copy)]
 pub struct RAM {
 	data: [u8; 16],
 }

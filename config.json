@@ -3,8 +3,7 @@
 		"resolution": [
 			128,
 			128
-		],
-		"render_mode": 1
+		]
 	},
 	"spu": {
 		"sprite_layout": [

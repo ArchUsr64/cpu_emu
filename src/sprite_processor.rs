@@ -1,3 +1,5 @@
+use crate::central_processor::CPU;
+
 use super::graphics_processor::GPU;
 use super::memory::RAM;
 
@@ -76,8 +78,9 @@ impl SPU {
 			layout_vec,
 		}
 	}
-	pub fn tick(self, gpu: &mut GPU) {
-		for sprite in self.sprite_vec {
+	pub fn tick(&mut self, cpu: &CPU, gpu: &mut GPU) {
+		for sprite in self.sprite_vec.iter_mut() {
+			sprite.update_position(cpu.ram);
 			sprite.write_to_gpu(gpu, &self.layout_vec)
 		}
 	}

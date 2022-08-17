@@ -1,9 +1,9 @@
 extern crate json;
 
 use crate::central_processor::CPU;
+use crate::config_parser;
 use crate::graphics_processor::GPU;
 use crate::sprite_processor::SPU;
-use crate::config_parser;
 use json::JsonValue;
 
 pub struct Computer {
@@ -24,5 +24,9 @@ impl Computer {
 		self.cpu.tick(instruction);
 		self.spu.tick(&self.cpu, &mut self.gpu);
 		self.gpu.render();
+	}
+
+	pub fn get_acr(&self) -> u8 {
+		self.cpu.acr.get()
 	}
 }

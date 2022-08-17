@@ -45,6 +45,3 @@ impl ACR {
 		self.data
 	}
 }
-
-//Program Counter Register
-type PCR = ACR;

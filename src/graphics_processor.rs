@@ -31,7 +31,8 @@ impl GPU {
 		self.resolution
 	}
 
-	pub fn set_vram(&mut self, address_x: usize, address_y: usize, value: u8){
-		self.vram[address_y][address_x] = value;
+	pub fn set_vram(&mut self, address_x: usize, address_y: usize, value: u8) {
+		self.vram[address_y % self.resolution.1 as usize][address_x % self.resolution.0 as usize] =
+			value;
 	}
 }

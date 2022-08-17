@@ -1,16 +1,18 @@
 mod central_processor;
 mod cli_arg_parser;
+mod computer;
 mod config_parser;
-mod control_processor;
 mod graphics_processor;
 mod json_extensions;
 mod memory;
 mod sprite_processor;
 mod term;
+use computer::Computer;
 
 fn main() {
-	let config = config_parser::parse_config_to_json();
-	let computer = control_processor::Computer::new(config);
+	let config = config_parser::parse_config_to_json("config.json");
+	let mut computer = Computer::new(config);
+	computer.tick(0b00000000);
 	std::process::exit(0);
 	let term_mode = cli_arg_parser::parse().term_mode;
 	let mut gpu = graphics_processor::GPU::new(2, 3);

@@ -1,7 +1,5 @@
-extern crate json;
-
 use crate::central_processor::CPU;
-use crate::config_parser;
+use crate::config_parser::{parse_cpu, parse_gpu, parse_spu};
 use crate::graphics_processor::GPU;
 use crate::sprite_processor::SPU;
 use json::JsonValue;
@@ -14,14 +12,15 @@ pub struct Computer {
 impl Computer {
 	pub fn new(config: JsonValue) -> Computer {
 		Computer {
-			spu: config_parser::parse_spu(&config["spu"]),
-			cpu: config_parser::parse_cpu(&config["cpu"]),
-			gpu: config_parser::parse_gpu(&config["gpu"]),
+			spu: parse_spu(&config["spu"]),
+			cpu: parse_cpu(&config["cpu"]),
+			gpu: parse_gpu(&config["gpu"]),
 		}
 	}
 
 	pub fn tick(&mut self, instruction: u8) {
 		self.cpu.tick(instruction);
+		self.gpu.clear();
 		self.spu.tick(&self.cpu, &mut self.gpu);
 		self.gpu.render();
 	}

@@ -1,9 +1,11 @@
 {
 	"gpu": {
 		"resolution": [
-			30,
-			30
-		]
+			2,
+			2
+		],
+		"render_enable": 1,
+		"debug_enable": 0
 	},
 	"spu": {
 		"sprite_layout": [
@@ -52,16 +54,17 @@
 				"layout_index": 0,
 				"control_mode": 1,
 				"position": [
-					3,
-					5
+					9,
+					0
 				],
-				"position_pointer": 7
+				"position_pointer": 0,
+				"debug_enable": 0
 			}
 		]
 	},
 	"cpu": {
 		"ram": [
-			8,
+			0,
 			9,
 			11,
 			8,
@@ -78,12 +81,13 @@
 			5,
 			6
 		],
-		"acm": 2,
+		"acm": 0,
 		"gpr": [
-			231,
-			121,
-			86,
-			23
-		]
+			0,
+			1,
+			12,
+			1
+		],
+		"debug_enable": 0
 	}
 }

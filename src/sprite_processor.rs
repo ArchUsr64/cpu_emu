@@ -1,4 +1,5 @@
 use crate::central_processor::CPU;
+use crate::log;
 
 use super::graphics_processor::GPU;
 use super::memory::RAM;
@@ -28,6 +29,7 @@ pub struct Sprite {
 	control_mode: SpriteControlMode,
 	position: (u8, u8),
 	position_pointer: u8,
+	debug_enable: bool,
 }
 impl Sprite {
 	pub fn new(
@@ -35,12 +37,14 @@ impl Sprite {
 		control_mode: SpriteControlMode,
 		position: (u8, u8),
 		position_pointer: u8,
+		debug_enable: bool,
 	) -> Sprite {
 		Sprite {
 			layout_index,
 			control_mode,
 			position,
 			position_pointer,
+			debug_enable,
 		}
 	}
 	pub fn update_position(&mut self, memory: RAM) {
@@ -52,9 +56,15 @@ impl Sprite {
 				(memory.get(memory_address), memory.get(memory_address + 1))
 			}
 			_ => self.position,
-		}
+		};
+		log!(
+			self.debug_enable,
+			"[SPU] Position updated to {:?}",
+			self.position_pointer
+		);
 	}
 	pub fn write_to_gpu(&self, gpu: &mut GPU, layout_vec: &Vec<SpriteLayout>) {
+		log!(self.debug_enable, "[SPU] Written to GPU");
 		for i in 0..layout_vec[self.layout_index as usize].size.0 as usize {
 			for j in 0..layout_vec[self.layout_index as usize].size.1 {
 				gpu.set_vram(
@@ -79,7 +89,8 @@ impl SPU {
 		}
 	}
 	pub fn tick(&mut self, cpu: &CPU, gpu: &mut GPU) {
-		for sprite in self.sprite_vec.iter_mut() {
+		for (i, sprite) in self.sprite_vec.iter_mut().enumerate() {
+			log!(sprite.debug_enable, "[SPU] Sprite[{}] Ticked", i);
 			sprite.update_position(cpu.ram);
 			sprite.write_to_gpu(gpu, &self.layout_vec)
 		}

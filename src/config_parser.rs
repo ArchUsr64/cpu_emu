@@ -28,10 +28,12 @@ pub fn parse_gpu(gpu_config: &JsonValue) -> GPU {
 	GPU::new(
 		gpu_config["resolution"][0].to_num() as u8,
 		gpu_config["resolution"][1].to_num() as u8,
+		gpu_config["render_enable"].to_num() > 0,
+		gpu_config["debug_enable"].to_num() > 0,
 	)
 }
 pub fn parse_cpu(cpu_config: &JsonValue) -> CPU {
-	let mut cpu = CPU::new();
+	let mut cpu = CPU::new(cpu_config["debug_enable"].to_num() > 0);
 	let ram_config = &cpu_config["ram"];
 	for i in 0..16 {
 		let value = (*ram_config)[i].to_num() as u8;
@@ -81,6 +83,7 @@ fn parse_sprite_vec(sprite_config: &JsonValue) -> Vec<Sprite> {
 		let position = sprite_config["position"].clone();
 		let position = (position[0].to_num() as u8, position[1].to_num() as u8);
 		let position_pointer = sprite_config["position_pointer"].to_num() as u8;
+		let debug_enabled = sprite_config["debug_enable"].to_num() > 0;
 		let sprite = Sprite::new(
 			layout_index,
 			match control_mode % 4 {
@@ -91,6 +94,7 @@ fn parse_sprite_vec(sprite_config: &JsonValue) -> Vec<Sprite> {
 			},
 			position,
 			position_pointer,
+			debug_enabled,
 		);
 		sprite_vec.push(sprite);
 	}

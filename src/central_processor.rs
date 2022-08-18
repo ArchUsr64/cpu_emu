@@ -1,4 +1,6 @@
 use super::memory::*;
+use crate::log;
+use crate::DEBUG_ENABLE;
 
 #[derive(Clone, Copy)]
 pub enum CPUOperationName {
@@ -19,6 +21,7 @@ pub enum CPUOperationName {
 	MVTOMEM,
 	LOADFROMACM,
 }
+
 impl CPUOperationName {
 	pub fn process(self, operand1: u8, operand2: u8) -> (u8, bool) {
 		match self {
@@ -61,7 +64,7 @@ pub struct CPUOperation {
 
 #[test]
 fn cpu_creation() {
-	let cpu = CPU::new();
+	let cpu = CPU::new(true);
 	for i in 0..16 {
 		assert_eq!(cpu.ram.get(i), 0u8);
 	}
@@ -73,7 +76,7 @@ fn cpu_creation() {
 
 #[test]
 fn cpu_functional_operations() {
-	let mut cpu = CPU::new();
+	let mut cpu = CPU::new(true);
 	for (operand1, operand2) in [(0, 5), (5, 3), (10, 10), (69, 42)] {
 		cpu.gpr.set(0, operand1);
 		cpu.gpr.set(1, operand2);
@@ -106,7 +109,7 @@ fn cpu_functional_operations() {
 
 #[test]
 fn cpu_memory_operations() {
-	let mut cpu = CPU::new();
+	let mut cpu = CPU::new(true);
 	let op_code = 0b1100;
 	for i in 0..4 {
 		for j in 0..4 {
@@ -123,7 +126,6 @@ fn cpu_memory_operations() {
 		for value_in_ram in 0..=255 {
 			cpu.ram.set(i, value_in_ram);
 			let instruction = (op_code << 4) + i;
-			println!("Instruction to run: {:0b}", instruction);
 			cpu.tick(instruction);
 			assert_eq!(value_in_ram, cpu.acr.get());
 		}
@@ -153,13 +155,15 @@ pub struct CPU {
 	pub gpr: GPR,
 	pub acr: ACR,
 	instruction_set: [CPUOperation; 16],
+	debug_enable: bool,
 }
 impl CPU {
-	pub fn new() -> CPU {
+	pub fn new(debug_enable: bool) -> CPU {
+		log!(DEBUG_ENABLE, "[CPU] NEW");
 		CPU {
-			ram: RAM::new(),
-			gpr: GPR::new(),
-			acr: ACR::new(),
+			ram: RAM::new(debug_enable),
+			gpr: GPR::new(debug_enable),
+			acr: ACR::new(debug_enable),
 			instruction_set: [
 				CPUOperation {
 					name: CPUOperationName::ADD,
@@ -242,6 +246,7 @@ impl CPU {
 					input_type: CPUOperationInputType::UniOperand2,
 				},
 			],
+			debug_enable,
 		}
 	}
 	fn parse_instruction(instruction: u8) -> (u8, u8, u8) {
@@ -254,6 +259,11 @@ impl CPU {
 		self.instruction_set[op_code as usize]
 	}
 	pub fn tick(&mut self, instruction: u8) {
+		log!(
+			self.debug_enable,
+			"[CPU] Ticked with instruction 0b{:08b}",
+			instruction
+		);
 		let (op_code, operand1, operand2) = CPU::parse_instruction(instruction);
 		let unified_operand = operand1 * 4 + operand2;
 		let operation = self.operation_from_op_code(op_code);

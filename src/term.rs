@@ -1,5 +1,4 @@
 extern crate ctrlc;
-extern crate termsize;
 
 #[macro_export]
 macro_rules! log {

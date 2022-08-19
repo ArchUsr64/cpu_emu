@@ -1,5 +1,4 @@
 mod central_processor;
-mod cli_arg_parser;
 mod computer;
 mod config_parser;
 mod control_processor;
@@ -8,6 +7,7 @@ mod json_extensions;
 mod memory;
 mod sprite_processor;
 mod term;
+mod test;
 use computer::Computer;
 use control_processor::CU;
 
@@ -31,7 +31,7 @@ fn main() {
 		instruction_vec.push(instruction.to_string());
 	}
 	let mut cu = CU::new(computer, instruction_vec);
-	while true {
+	loop {
 		cu.tick();
 	}
 }

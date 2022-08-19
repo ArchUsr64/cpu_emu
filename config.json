@@ -4,7 +4,7 @@
 			2,
 			2
 		],
-		"render_enable": 1,
+		"render_enable": 0,
 		"debug_enable": 0
 	},
 	"spu": {
@@ -88,6 +88,6 @@
 			12,
 			1
 		],
-		"debug_enable": 0
+		"debug_enable": 1
 	}
 }

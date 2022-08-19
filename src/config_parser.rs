@@ -2,7 +2,6 @@ use json::JsonValue;
 
 use crate::{
 	central_processor::CPU,
-	computer::Computer,
 	graphics_processor::GPU,
 	json_extensions::ToNum,
 	sprite_processor::{Sprite, SpriteControlMode, SpriteLayout, SPU},
@@ -11,7 +10,6 @@ use crate::{
 extern crate json;
 
 pub fn parse_config_to_json(config_path: &str) -> JsonValue {
-	let config_path = "config.json";
 	let f = std::fs::read_to_string(config_path);
 	let f = match f {
 		Ok(file) => file,
@@ -44,7 +42,7 @@ pub fn parse_cpu(cpu_config: &JsonValue) -> CPU {
 		let value = (*gpr_config)[i].to_num() as u8;
 		cpu.gpr.set(i as u8, value);
 	}
-	cpu.acr.set(cpu_config["acm"].to_num() as u8);
+	cpu.acr.set(Some(cpu_config["acm"].to_num() as u8));
 	cpu
 }
 pub fn parse_spu(spu_config: &JsonValue) -> SPU {
@@ -57,7 +55,6 @@ fn parse_sprite_layout(layout_config: &JsonValue) -> Vec<SpriteLayout> {
 	let mut sprite_layout_vec: Vec<SpriteLayout> = Vec::new();
 	for i in 0..layout_count {
 		let layout_config = &layout_config[i];
-		let control_mode = layout_config["control_mode"].to_num();
 		let size: (usize, usize) = (
 			layout_config["texture"][0].len(),
 			layout_config["texture"].len(),

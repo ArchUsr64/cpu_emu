@@ -1,5 +1,3 @@
-use std::ptr::addr_of_mut;
-
 use crate::log;
 use crate::DEBUG_ENABLE;
 
@@ -37,6 +35,7 @@ impl RAM {
 }
 
 //General Purpose Register
+#[derive(Clone, Copy)]
 pub struct GPR {
 	data: [u8; 4],
 	debug_enable: bool,
@@ -70,6 +69,7 @@ impl GPR {
 }
 
 //Accumulator Register
+#[derive(Clone, Copy)]
 pub struct ACR {
 	data: u8,
 	debug_enable: bool,
@@ -82,9 +82,14 @@ impl ACR {
 			data: 0u8,
 		}
 	}
-	pub fn set(&mut self, val: u8) {
-		log!(self.debug_enable, "[ACR] Value set to '{:03}'", val);
-		self.data = val;
+	pub fn set(&mut self, val: Option<u8>) {
+		match val {
+			Some(val) => {
+				log!(self.debug_enable, "[ACR] Value set to '{:03}'", val);
+				self.data = val;
+			}
+			_ => (),
+		}
 	}
 	pub fn get(&self) -> u8 {
 		log!(

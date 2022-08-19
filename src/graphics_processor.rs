@@ -64,11 +64,6 @@ impl GPU {
 		}
 	}
 
-	pub fn get_resolution(&self) -> (u8, u8) {
-		log!(self.debug_enable, "[GPU] Resolution requested");
-		self.resolution
-	}
-
 	pub fn set_vram(&mut self, address_x: usize, address_y: usize, value: u8) {
 		log!(
 			self.debug_enable,
